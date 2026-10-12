@@ -20,4 +20,4 @@ A simple Streamlit app showing the GDP of different countries in the world.
 
 ## استمارة الزيارة الإشرافية
 
-تجد الاستمارة المستقلة وخدمة Workers AI وإرشادات نشرها داخل [مجلد الاستمارة](supervisory-visit/README.md).
+أضيفت صفحة للاستـمارة ضمن قائمة صفحات Streamlit. للاستخدام وإعداد المساعد الذكي، راجع [إرشادات الاستمارة](supervisory-visit/README.md).
