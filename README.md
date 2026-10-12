@@ -17,3 +17,7 @@ A simple Streamlit app showing the GDP of different countries in the world.
    ```
    $ streamlit run streamlit_app.py
    ```
+
+## استمارة الزيارة الإشرافية
+
+تجد الاستمارة المستقلة وخدمة Workers AI وإرشادات نشرها داخل [مجلد الاستمارة](supervisory-visit/README.md).
