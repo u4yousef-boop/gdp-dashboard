@@ -159,7 +159,7 @@ $("reset").onclick=()=>{if(confirm("بدء استمارة جديدة؟")){try{lo
 $("theme").onclick=()=>{const d=document.documentElement,x=d.dataset.theme=="dark"||(!d.dataset.theme&&matchMedia("(prefers-color-scheme:dark)").matches);d.dataset.theme=x?"light":"dark"};
 $("print").onclick=()=>window.print();
 $("saved").onclick=()=>$("logcard").scrollIntoView({behavior:"smooth"});
-const requestAI=async(prompt)=>{if(location.protocol==="file:")throw new Error("يجب رفع الاستمارة إلى خدمة الاستضافة أولًا.");const res=await fetch("/api/ai",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({prompt})});const data=await res.json().catch(()=>({}));if(!res.ok)throw new Error(data.error||"تعذر الاتصال بخدمة الذكاء الاصطناعي.");return String(data.text||"")};
+const requestAI=async(prompt)=>{if(location.protocol==="file:")throw new Error("الاستمارة مفتوحة كملف محلي. افتح رابط الموقع المنشور لتشغيل المساعد الذكي.");const res=await fetch("/api/ai",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({prompt})});const data=await res.json().catch(()=>({}));if(!res.ok)throw new Error(data.error||"فشل الاتصال بخدمة الذكاء الاصطناعي (HTTP "+res.status+"). تحقق من ضبط رابط الخدمة.");return String(data.text||"")};
 async function SM(prompt){return {text:await requestAI(prompt)}}
 SM.json=async(prompt)=>JSON.parse(await requestAI(prompt));
 const ctx=()=>{const f=get().f;return "بيانات الزيارة: المعلم "+f.teacher+"، الصف "+f.grade+"، المادة "+f.subject+"، عنوان الدرس "+f.lesson+"\nتقديرات البنود (1 متميز، 2 جيد، 3 ملائم، 4 غير ملائم، 5 يحتاج إلى تدخل):\n"+I.map((x,i)=>R[i]?`- ${x[2]}: ${R[i]} (${N[R[i]-1]}) — ${D(i,R[i])}${$("t"+i).value?" | الوصف الميداني: "+$("t"+i).value:""}`:"").filter(Boolean).join("\n")};
@@ -169,7 +169,7 @@ const o=btn.textContent;btn.textContent="⏳ جارٍ الكتابة…";btn.dis
 try{const spec=keys.map(k=>{const f=FL.find(x=>x[0]==k);return `"${k}": ${f[1]}${k=="support"?SUP():""} — لا يزيد عن ${Math.floor(f[2]*.85)} حرفًا`+($(k).value.trim()?` (حسّن هذا النص الحالي: ${$(k).value.trim()})`:"")}).join("\n");
 const r=await SM.json(SYS+"\n"+ctx()+"\nأعد كائن JSON فقط (بلا شرح ولا علامات) مفاتيحه وقيمه كالتالي:\n"+spec);
 keys.forEach(k=>{if(r&&r[k]){$(k).value=String(r[k]).slice(0,FL.find(x=>x[0]==k)[2]);$(k).classList.remove("bad")}});upd()}
-catch(e){alert("تعذّر توليد النص حاليًا، حاول مرة أخرى.")}
+catch(e){alert(e&&e.message?e.message:"تعذّر توليد النص حاليًا، حاول مرة أخرى.")}
 btn.textContent=o;btn.disabled=false}
 const lessonOk=()=>{const f=get().f;if(!f.subject.trim()||!f.lesson.trim()){alert("أدخل المادة وعنوان الدرس في الشريط العلوي ليكتب المساعد وصفًا واقعيًا مرتبطًا بالدرس.");return false}return true};
 const IP=i=>`البند: ${I[i][2]}\nالتقدير: ${R[i]} (${N[R[i]-1]})\nقاعدة التقييم المعتمدة لهذا التقدير: ${D(i,R[i])}`;
@@ -177,13 +177,13 @@ const IR="اكتب وصفًا تربويًا عمليًا وواقعيًا (جم
 async function aiItem(i,btn){if(!R[i]){alert("اختر تقدير هذا البند أولًا.");return}if(!lessonOk())return;
 const o=btn.textContent;btn.textContent="⏳";btn.disabled=true;
 try{const f=get().f,cur=$("t"+i).value.trim(),r=await SM(SYS+`\nالمادة: ${f.subject}، الصف: ${f.grade}، عنوان الدرس: ${f.lesson}\n`+IP(i)+"\n"+IR+"\nأعد نص الوصف فقط بلا مقدمات."+(cur?"\nحسّن هذا الوصف الحالي: "+cur:""));
-$("t"+i).value=r.text.trim().slice(0,300)}catch(e){alert("تعذّر توليد الوصف حاليًا، حاول مرة أخرى.")}
+$("t"+i).value=r.text.trim().slice(0,300)}catch(e){alert(e&&e.message?e.message:"تعذّر توليد الوصف حاليًا، حاول مرة أخرى.")}
 btn.textContent=o;btn.disabled=false}
 async function aiItems(btn){const ks=I.map((_,i)=>i).filter(i=>R[i]);if(!ks.length){alert("قيّم بندًا واحدًا على الأقل.");return}if(!lessonOk())return;
 const o=btn.textContent;btn.textContent="⏳ جارٍ الكتابة…";btn.disabled=true;
 try{const f=get().f,r=await SM.json(SYS+`\nالمادة: ${f.subject}، الصف: ${f.grade}، عنوان الدرس: ${f.lesson}\n`+ks.map(i=>`المفتاح "t${i}":\n`+IP(i)).join("\n---\n")+"\n"+IR+"\nأعد كائن JSON فقط (بلا شرح) مفاتيحه كما هي وقيمه الأوصاف.");
 ks.forEach(i=>{if(r&&r["t"+i])$("t"+i).value=String(r["t"+i]).slice(0,300)})}
-catch(e){alert("تعذّر توليد الأوصاف حاليًا، حاول مرة أخرى.")}
+catch(e){alert(e&&e.message?e.message:"تعذّر توليد الأوصاف حاليًا، حاول مرة أخرى.")}
 btn.textContent=o;btn.disabled=false}
 document.addEventListener("change",e=>{const g=e.target,c=g.dataset&&g.dataset.c;if(c){const[i,j]=c.split(",").map(Number),a=ks(i),b=g.checked?[...new Set([...a,j])]:a.filter(x=>x!=j);$("k"+i).value=b.join(",");R[i]=calc(i);upd()}});
 document.addEventListener("click",e=>{const t=e.target,c=t.dataset&&t.dataset.cp,a=t.dataset&&t.dataset.ai,saveField=t.dataset&&t.dataset.saveField;
