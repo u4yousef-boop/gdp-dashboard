@@ -127,7 +127,7 @@ const IND=[
 const W=[[1,2,1,1],[2,1,1,1],[1,1,1,1,1],[1,1,1,1,1],[1,1,1,1,1],[1,1,1,2],[2,1,2],[2,1,1,1],[2,1,2],[2,1,1,1],[2,1,1,1],[1,1,1,1,1],[2,1,1,1]];
 let h="",last="";
 I.forEach((x,i)=>{if(x[0]!=last){h+=`<div class="dom">${x[0]}</div>`;last=x[0]}
-h+=`<div class="card item"><div class="top"><div class="num">${i+1}</div><div><div class="std">${x[1]}</div><div class="ind">${x[2]}</div></div></div><div class="ck">${IND[i].map((t,j)=>`<label class="ci"><input type="checkbox" data-c="${i},${j}"> ${t}${W[i][j]>1?' <b class="wt">(درجتان)</b>':""}</label>`).join("")}<input type="hidden" id="k${i}"><div class="std" id="cb${i}"></div></div><div class="rates" data-i="${i}">${N.map((n,k)=>`<button data-v="${k+1}"><b>${k+1}</b>${n}</button>`).join("")}</div><div class="desc" id="d${i}">اختر التقدير لعرض وصفه.</div><div class="fh"><label>الوصف العملي حسب الدرس والتقدير</label><span class="noprint"><button class="ic ai" type="button" title="AI Agent: الوصف العملي حسب الدرس والتقدير" aria-label="AI Agent: الوصف العملي حسب الدرس والتقدير" data-ia="${i}">✨ إنشاء الوصف</button> <button class="ic" data-cp="t${i}">📋 نسخ</button></span></div><textarea id="t${i}" maxlength="300" style="min-height:56px"></textarea></div>`});
+h+=`<div class="card item"><div class="top"><div class="num">${i+1}</div><div><div class="std">${x[1]}</div><div class="ind">${x[2]}</div></div></div><div class="ck">${IND[i].map((t,j)=>`<label class="ci"><input type="checkbox" data-c="${i},${j}"> ${t}${W[i][j]>1?' <b class="wt">(درجتان)</b>':""}</label>`).join("")}<input type="hidden" id="k${i}"><div class="std" id="cb${i}"></div></div><div class="rates" data-i="${i}">${N.map((n,k)=>`<button data-v="${k+1}"><b>${k+1}</b>${n}</button>`).join("")}</div><div class="desc" id="d${i}">اختر التقدير لعرض وصفه.</div><div class="fh"><label>الوصف العملي حسب الدرس والتقدير</label><span class="noprint"><button class="ic ai" type="button" title="AI Agent: الوصف العملي حسب الدرس والتقدير" aria-label="AI Agent: الوصف العملي حسب الدرس والتقدير" data-ia="${i}">🤖 إنشاء الوصف</button> <button class="ic" data-cp="t${i}">📋 نسخ</button></span></div><textarea id="t${i}" maxlength="300" style="min-height:56px"></textarea></div>`});
 $("items").innerHTML=h;
 F.push(...I.map((_,i)=>"t"+i),...I.map((_,i)=>"k"+i));
 const FL=[["strong","جوانب الإجادة في الأداء وأدلتها",128],["weak","الجوانب التي تحتاج إلى تطوير في الأداء وأدلتها",815],["notes","الملاحظات",860],["support","الدعم المقدم",801],["recs","التوصيات",941]];
@@ -161,7 +161,7 @@ $("print").onclick=()=>window.print();
 $("saved").onclick=()=>$("logcard").scrollIntoView({behavior:"smooth"});
 const requestAI=async(prompt)=>{if(location.protocol==="file:")throw new Error("يجب رفع الاستمارة إلى خدمة الاستضافة أولًا.");const res=await fetch("/api/ai",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({prompt})});const data=await res.json().catch(()=>({}));if(!res.ok)throw new Error(data.error||"تعذر الاتصال بخدمة الذكاء الاصطناعي.");return String(data.text||"")};
 async function SM(prompt){return {text:await requestAI(prompt)}}
-SM.json=async(prompt)=>{let text=await requestAI(prompt);text=text.trim().replace(/^```(?:json)?\s*/i,"").replace(/\s*```$/,"");const first=text.indexOf("{"),last=text.lastIndexOf("}");if(first>=0&&last>first)text=text.slice(first,last+1);return JSON.parse(text)};
+SM.json=async(prompt)=>JSON.parse(await requestAI(prompt));
 const ctx=()=>{const f=get().f;return "بيانات الزيارة: المعلم "+f.teacher+"، الصف "+f.grade+"، المادة "+f.subject+"، عنوان الدرس "+f.lesson+"\nتقديرات البنود (1 متميز، 2 جيد، 3 ملائم، 4 غير ملائم، 5 يحتاج إلى تدخل):\n"+I.map((x,i)=>R[i]?`- ${x[2]}: ${R[i]} (${N[R[i]-1]}) — ${D(i,R[i])}${$("t"+i).value?" | الوصف الميداني: "+$("t"+i).value:""}`:"").filter(Boolean).join("\n")};
 const SYS="أنت مشرف تربوي خبير في الإشراف التربوي والقياس والتقويم في سلطنة عمان. اكتب بالعربية الفصحى المهنية الموجزة، بصياغة موضوعية قابلة للقياس، دون ذكر أسماء، ومستندًا إلى التقديرات الممنوحة ومدلولاتها. ";
 async function ai(keys,btn){if(!R.some(Boolean)){alert("قيّم بندًا واحدًا على الأقل ليتمكن المساعد الذكي من الكتابة.");return}
@@ -173,7 +173,6 @@ catch(e){alert("تعذّر توليد النص حاليًا، حاول مرة أ
 btn.textContent=o;btn.disabled=false}
 const lessonOk=()=>{const f=get().f;if(!f.subject.trim()||!f.lesson.trim()){alert("أدخل المادة وعنوان الدرس في الشريط العلوي ليكتب المساعد وصفًا واقعيًا مرتبطًا بالدرس.");return false}return true};
 const IP=i=>`البند: ${I[i][2]}\nالتقدير: ${R[i]} (${N[R[i]-1]})\nقاعدة التقييم المعتمدة لهذا التقدير: ${D(i,R[i])}`;
-const aiUnavailable=()=>alert("لا تعمل أداة الذكاء الاصطناعي عند فتح الملف مباشرة. استخدم رابط الاستضافة بعد نشره لتشغيل Workers AI.");
 const IR="اكتب وصفًا تربويًا عمليًا وواقعيًا (جملتان إلى ثلاث) لما يُلاحَظ في الحصة لهذا البند، يترجم قاعدة التقييم المعتمدة إلى ممارسات وسلوكيات ملاحظة مرتبطة بالمادة وعنوان الدرس والصف، ويتسق مع درجة التقدير دون مبالغة ولا مجاملة ودون ذكر أسماء، ولا يزيد عن 250 حرفًا.";
 async function aiItem(i,btn){if(!R[i]){alert("اختر تقدير هذا البند أولًا.");return}if(!lessonOk())return;
 const o=btn.textContent;btn.textContent="⏳";btn.disabled=true;
@@ -188,29 +187,24 @@ catch(e){alert("تعذّر توليد الأوصاف حاليًا، حاول م�
 btn.textContent=o;btn.disabled=false}
 document.addEventListener("change",e=>{const g=e.target,c=g.dataset&&g.dataset.c;if(c){const[i,j]=c.split(",").map(Number),a=ks(i),b=g.checked?[...new Set([...a,j])]:a.filter(x=>x!=j);$("k"+i).value=b.join(",");R[i]=calc(i);upd()}});
 document.addEventListener("click",e=>{const t=e.target,c=t.dataset&&t.dataset.cp,a=t.dataset&&t.dataset.ai,saveField=t.dataset&&t.dataset.saveField;
-if(saveField){const ok=saveDraft(),o=t.textContent;t.textContent=ok?"✓ تم الحفظ":"تعذر الحفظ";t.disabled=true;setTimeout(()=>{t.textContent=o;t.disabled=false},1400)}; if(t.classList.contains("chip")){const k=+t.dataset.k,v=sel();$("chipsv").value=(v.includes(k)?v.filter(x=>x!=k):[...v,k]).join(",");upd()}
+if(saveField){const ok=saveDraft(),o=t.textContent;t.textContent=ok?"✓ تم الحفظ":"تعذر الحفظ";t.disabled=true;setTimeout(()=>{t.textContent=o;t.disabled=false},1400)};
+if(t.classList.contains("chip")){const k=+t.dataset.k,v=sel();$("chipsv").value=(v.includes(k)?v.filter(x=>x!=k):[...v,k]).join(",");upd()}
 if(t.id=="chipins"){const n=sel().map(k=>SUPL[k]);if(n.length){const x=$("support");x.value=((x.value.trim()?x.value.trim()+"\n":"")+"الدعم المقدم: "+n.join("، ")+".").slice(0,801);cnt("support");x.classList.remove("bad")}}
-if(a){if(location.protocol==="file:")aiUnavailable();else ai([a],t)}if(t.dataset&&t.dataset.ia!==undefined){if(location.protocol==="file:")aiUnavailable();else aiItem(+t.dataset.ia,t)}if(t.id=="aiitems"){if(location.protocol==="file:")aiUnavailable();else aiItems(t)}if(t.id=="aiall"){if(location.protocol==="file:")aiUnavailable();else ai(FL.map(f=>f[0]),t)}
+if(a&&SM)ai([a],t);if(t.dataset&&t.dataset.ia!==undefined&&SM)aiItem(+t.dataset.ia,t);if(t.id=="aiitems"&&SM)aiItems(t);if(t.id=="aiall"&&SM)ai(FL.map(f=>f[0]),t);
 if(c){const v=$(c).value,done=()=>{const o=t.textContent;t.textContent="✓ تم النسخ";setTimeout(()=>t.textContent=o,1200)};
 (navigator.clipboard?navigator.clipboard.writeText(v):Promise.reject()).then(done).catch(()=>{$(c).select();try{document.execCommand("copy")}catch(x){}done()})}});
 $("pdf").onclick=async()=>{const b=$("pdf"),o=b.textContent;b.textContent="⏳ جارٍ التصدير…";
-try{if(!window.html2canvas||!window.jspdf)throw 0;
+try{const dl=await claude.use("downloads");if(!dl||!window.html2canvas||!window.jspdf)throw 0;
 document.body.classList.add("cap");
 const cv=await html2canvas(document.querySelector(".wrap"),{scale:1.6,backgroundColor:getComputedStyle(document.body).backgroundColor,windowWidth:900});
 document.body.classList.remove("cap");
 const P=new jspdf.jsPDF("p","mm","a4"),pw=210,ph=297,ih=cv.height*pw/cv.width,img=cv.toDataURL("image/jpeg",.92);let y=0;
 while(y<ih){if(y>0)P.addPage();P.addImage(img,"JPEG",0,-y,pw,ih);y+=ph}
-const blob=P.output("blob"),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="supervisory-visit-"+$("visit").value+".pdf";a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}
+await dl.save({filename:"supervisory-visit-"+$("visit").value+".pdf",data:P.output("blob")})}
 catch(e){document.body.classList.remove("cap");if(!(e&&e.code=="declined"))window.print()}
 b.textContent=o};
 loadDraft();upd();log();
 </script>
 </body>
 </html>
-
-
-
-
-
-
 
